@@ -1,40 +1,17 @@
 app:
-  measurementPeriodInSec: 30
+  measurementPeriodInSec: 10
   refreshDiscoveryPeriodInSec: 60
   httpServerPort: 8080
 
 discovery:
-#  consul:
-#    host: consul.service.consul
-#    port: 8500
-#    timeoutInSec: 10
-#    readConsistency: STALE
-#    tags:
-#      - couchbase-memcached
-#      - cluster-CLUSTERNAME
-#      - bucket-BUCKETNAME
-  staticDns:
-    clustername: mycluster
-    host: localhost
+  consul:
+    host: consul.service.consul
+    port: 8500
+    timeoutInSec: 10
+    readConsistency: STALE
+    tags:
+      - bucket-Core.Services.Test.Cache
 
 service:
-  type: COUCHBASE_STATS
+  type: MEMCACHED_INJECTOR
   timeoutInSec: 60
-  username: Administrator
-  password: password
-  #bucketpassword: password
-
-couchbaseStats:
-  bucket: # API : /pools/default/buckets/MYBUCKET/nodes/MYNODE:PORT/stats
-    - ep_mem_high_wat
-    - vb_active_resident_items_ratio
-    - vb_replica_resident_items_ratio
-    - ep_mem_low_wat
-    - ep_diskqueue_items
-    - ep_oom_errors
-    - ep_tmp_oom_errors
-    - ep_max_size
-  xdcr: # API: replications/XDCR_UUID/MYBUCKET_SOURCE/MYBUCKET_DESTINATION/
-    - bandwidth_usage
-    - percent_completeness
-    - changes_left

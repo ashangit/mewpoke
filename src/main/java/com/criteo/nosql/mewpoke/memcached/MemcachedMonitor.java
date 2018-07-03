@@ -205,4 +205,19 @@ public class MemcachedMonitor implements AutoCloseable {
             logger.error("Cannot shutdown memcached client properly for {}", serviceName, e);
         }
     }
+
+    public void injectSet(final long rangeBegin, final long rangeEnd) {
+        for(long i = rangeBegin; i < rangeEnd; i++) {
+            client.set(""+i, 0, data.getData());
+        }
+    }
+
+    public void injectGet(long rangeLength, long nbSamples) {
+        final long step = rangeLength / nbSamples;
+        for(long i = 0; i < rangeLength; i+= step) {
+            for(long x = 0; x < 2500; x++) {
+                client.asyncGet(""+(i+x));
+            }
+        }
+    }
 }

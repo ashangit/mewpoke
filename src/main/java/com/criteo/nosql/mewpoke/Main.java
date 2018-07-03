@@ -6,6 +6,7 @@ import com.criteo.nosql.mewpoke.couchbase.CouchbaseRunnerStats;
 import com.criteo.nosql.mewpoke.discovery.ConsulDiscovery;
 import com.criteo.nosql.mewpoke.discovery.CouchbaseDiscovery;
 import com.criteo.nosql.mewpoke.discovery.IDiscovery;
+import com.criteo.nosql.mewpoke.memcached.MemcachedRunnerInjector;
 import com.criteo.nosql.mewpoke.memcached.MemcachedRunnerLatency;
 import com.criteo.nosql.mewpoke.memcached.MemcachedRunnerStats;
 import com.criteo.nosql.mewpoke.memcached.MemcachedRunnerStatsItems;
@@ -88,6 +89,8 @@ public class Main {
             switch (type) {
                 case "MEMCACHED":
                     return new MemcachedRunnerLatency(cfg, discovery);
+                case "MEMCACHED_INJECTOR":
+                    return new MemcachedRunnerInjector(cfg, discovery);
                 case "MEMCACHED_STATS":
                     return new MemcachedRunnerStats(cfg, discovery);
                 case "MEMCACHED_SLABS":

@@ -40,7 +40,7 @@ public abstract class MemcachedRunnerAbstract implements AutoCloseable, Runnable
     @Override
     public void run() {
 
-        final List<EVENT> evts = Arrays.asList(EVENT.UPDATE_TOPOLOGY, EVENT.POKE);
+        final List<EVENT> evts = Arrays.asList(EVENT.UPDATE_TOPOLOGY, EVENT.INJECT);
 
         try {
             for (; ; ) {
@@ -76,7 +76,7 @@ public abstract class MemcachedRunnerAbstract implements AutoCloseable, Runnable
                 lastEvt.nexTick = start + refreshDiscoveryPeriodInMs;
                 break;
 
-            case POKE:
+            case INJECT:
                 lastEvt.nexTick = start + measurementPeriodInMs;
                 break;
         }
@@ -88,7 +88,7 @@ public abstract class MemcachedRunnerAbstract implements AutoCloseable, Runnable
                 updateTopology();
                 break;
 
-            case POKE:
+            case INJECT:
                 poke();
                 break;
         }
@@ -142,7 +142,7 @@ public abstract class MemcachedRunnerAbstract implements AutoCloseable, Runnable
 
     private enum EVENT {
         UPDATE_TOPOLOGY(System.currentTimeMillis()),
-        POKE(System.currentTimeMillis());
+        INJECT(System.currentTimeMillis());
 
         public long nexTick;
 
