@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.InetSocketAddress;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class CouchbaseRunnerAbstract implements AutoCloseable, Runnable {
 
@@ -28,7 +29,7 @@ public abstract class CouchbaseRunnerAbstract implements AutoCloseable, Runnable
         this.measurementPeriodInMs = Long.parseLong(cfg.getApp().getOrDefault("measurementPeriodInSec", "30")) * 1000L;
         this.refreshDiscoveryPeriodInMs = Long.parseLong(cfg.getApp().getOrDefault("refreshDiscoveryPeriodInSec", "300")) * 1000L;
 
-        this.services = Collections.emptyMap();
+        this.services = new HashMap<>();
         this.monitors = new HashMap<>();
         this.metrics = new HashMap<>();
     }
@@ -104,26 +105,34 @@ public abstract class CouchbaseRunnerAbstract implements AutoCloseable, Runnable
         }
 
         // Dispose old monitors
-        services.forEach((service, addresses) -> {
+        final Map<Service, Set<InetSocketAddress>> oldServices = new HashMap<>(services);
+        oldServices.forEach((service, addresses) -> {
             if (!Objects.equals(addresses, new_services.get(service))) {
-                logger.info("{} has changed, its monitor will be disposed.", service);
-                monitors.remove(service)
+                Optional<CouchbaseMonitor> cMonitor = CouchbaseMonitor.fromNodes(service, new_services.get(service), cfg);
+                Set<String> ipsFromCouchbase = cMonitor.map(mon -> mon.getNodes().stream().map(node -> node.hostname().address()).collect(Collectors.toSet()))
+                    .orElse(new HashSet<>());
+                Set<String> ipsCurrentService = addresses.stream().map(add -> add.getAddress().getHostAddress()).collect(Collectors.toSet());
+                if(!Objects.equals(ipsCurrentService, ipsFromCouchbase)) {
+                    logger.info("{} has changed, its monitor will be disposed.", service);
+                    monitors.remove(service)
                         .ifPresent(mon -> mon.close());
-                metrics.remove(service)
+                    metrics.remove(service)
                         .close();
+                    services.remove(service);
+                }
             }
         });
 
         // Create new ones
         new_services.forEach((service, new_addresses) -> {
-            if (!Objects.equals(services.get(service), new_addresses)) {
+            if (!monitors.containsKey(service)) {
                 logger.info("A new Monitor for {} will be created.", service);
+                CouchbaseMetrics couchbaseMetricsService = new CouchbaseMetrics(service);
                 monitors.put(service, CouchbaseMonitor.fromNodes(service, new_addresses, cfg));
                 metrics.put(service, new CouchbaseMetrics(service));
+                services.put(service, new_addresses);
             }
         });
-
-        services = new_services;
     }
 
     protected abstract void poke();
